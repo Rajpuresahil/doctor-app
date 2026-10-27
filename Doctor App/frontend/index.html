@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Doctor App</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <h1>🩺 Doctor App <small>speech-gated clinical scribe</small></h1>
+  <div id="engines" class="engines"></div>
+</header>
+<main>
+  <section class="card" id="left">
+    <h2>🎙️ Live Medical Transcription</h2>
+    <div class="btns">
+      <button id="start" class="primary">🎤 Start Mic</button>
+      <button id="stop" class="danger" disabled>■ Stop</button>
+      <button id="clear">🗑 Clear</button>
+      <button id="save" class="ok">💾 Save Recording</button>
+      <button id="demo">▶ Demo consult</button>
+    </div>
+    <div class="chips">
+      <span class="chip">WORDS: <b id="words">0</b></span>
+      <span class="chip">CHUNKS: <b id="chunks">0</b></span>
+      <span class="chip" title="Audio the VAD never sent to Whisper">SILENCE SKIPPED: <b id="saved">0%</b></span>
+    </div>
+    <div class="meter"><canvas id="meter" width="600" height="46"></canvas><span id="vadstate">idle</span></div>
+    <div id="transcript" class="transcript placeholder">Ready — click Start Mic and speak naturally. VAD will auto-chunk your speech.</div>
+    <button id="process" class="primary wide">⚡ Process Transcript with AI</button>
+  </section>
+
+  <section class="card" id="right">
+    <div class="rhead"><h2>⏳ AI Medical Summary</h2><button id="clearsum" class="ghost">× Clear</button></div>
+    <div id="grounding" class="grounding"></div>
+    <div class="pt"><b id="pname">Patient Name: —</b><div id="pdetail">Age: — Gender: —</div></div>
+    <div id="sections"></div>
+    <button id="copy" class="primary wide">Copy to Prescription</button>
+  </section>
+</main>
+<script src="app.js"></script>
+</body>
+</html>
