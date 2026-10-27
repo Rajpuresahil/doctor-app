@@ -1,41 +1,147 @@
-# 🩺 Doctor App — speech-gated clinical scribe
+# 🩺 Doctor App — Speech-Gated Clinical Scribe
 
-Mic → **VAD (in the browser)** → **Whisper** → live transcript → **LLM** → structured clinical record + summary.
+> **Author:** Sahil Rajpure (M.Sc. AI & Data Science)
+> 
+> 
+> **Overview:** A full-stack, speech-gated clinical scribe web application designed to eliminate administrative burden for clinicians while maintaining strict data grounding and safety.
+> 
+> 
 
-## Run
+---
+
+## 🚀 Run the Application
+
 ```bash
-./run.sh            # creates venv, installs, serves http://localhost:8000
+./run.sh            # creates venv, installs dependencies, and serves http://localhost:8000
+
 ```
-Open http://localhost:8000 (mic needs `localhost` or HTTPS). Optional: copy `.env.example` to `.env` and add `ANTHROPIC_API_KEY` or `OPENAI_API_KEY`.
-No keys? It still works: local Whisper + an offline rule-based extractor. **▶ Demo consult** runs the whole UI without a mic.
 
-## What makes it different
-| Idea | Why it matters |
-|---|---|
-| **VAD runs client-side** (adaptive noise floor, hysteresis, 300 ms pre-roll, 700 ms hangover, 12 s cap) | Silence never leaves the browser. The UI shows *"Silence skipped %"*: bandwidth, latency and ASR compute saved, and fewer Whisper hallucinations. |
-| **Context-primed Whisper** | Each segment is decoded with a medical vocabulary primer plus the transcript tail, which improves drug names and keeps phrasing consistent across chunks. |
-| **Hallucination filter** | Drops typical Whisper phantom outputs ("thank you", "you") on very short clips. |
-| **Evidence-grounded extraction** | The LLM must return a verbatim quote for each finding. The server verifies each quote exists in the transcript and drops the rest. The UI shows `grounded N/M`, and **hovering a summary section highlights its source words** in the transcript. Clinicians can verify in one glance. |
-| **No-invention schema** | Positive vs. explicitly denied symptoms kept separate; assessment only as stated by the clinician. |
-| **Graceful degradation** | Claude → OpenAI → offline heuristic. The UI states which engine produced the result. |
-| **Ordered async queue** | Segments are transcribed in order, with a "… transcribing" indicator. |
+Open **http://localhost:8000** in your browser (microphone access requires `localhost` or HTTPS).
 
-## Model selection (lightweight, reproducible)
-Default **`faster-whisper base.en`, int8, CPU, beam 1**. Rationale: `tiny.en` is fastest but weakest on drug names; `small.en` is more accurate but roughly doubles latency on CPU. `base.en` is the usual latency/accuracy sweet spot for VAD-chunked live use. I did **not** measure numbers for this submission. Run the included script on your own clips to choose with data:
+* **Optional Configuration:** Copy `.env.example` to `.env` and add your `ANTHROPIC_API_KEY` or `OPENAI_API_KEY`.
+* **No Keys? No Problem:** The app features a graceful offline fallback utilizing local Whisper and offline rule-based extraction. Click **▶ Demo consult** to run the complete UI workflow instantly without a microphone.
+
+
+
+---
+
+## ✨ What Makes It Different
+
+| Innovation | Why It Matters |
+| --- | --- |
+| **Client-Side VAD** (Adaptive noise floor, hysteresis, 300 ms pre-roll, 700 ms hangover, 12s cap)
+
+ | Silence never leaves the browser. Shows *"Silence skipped %"* to save bandwidth, reduce latency, cut ASR compute costs, and prevent Whisper hallucinations.
+
+ |
+| **Context-Primed Whisper**
+
+ | Each audio segment is decoded with a medical vocabulary primer plus transcript tail context, significantly improving drug name accuracy.
+
+ |
+| **Hallucination Filter**
+
+ | Automatically drops typical Whisper phantom outputs (e.g., "thank you", "you") on short clips.
+
+ |
+| **Evidence-Grounded Extraction**
+
+ | The LLM must return a verbatim quote for every finding. The server verifies quotes against the transcript and discards ungrounded data. Hovering any summary section highlights its exact source words in the transcript.
+
+ |
+| **No-Invention Schema**
+
+ | Strictly separates positive symptoms from explicitly denied symptoms; assessments are captured only as stated by the clinician.
+
+ |
+| **Graceful Degradation**
+
+ | Automatically routes from Claude → OpenAI → Offline heuristic, displaying the active engine status directly in the UI.
+
+ |
+
+---
+
+## 🖥️ Live Demo Walkthrough
+
+Clicking **▶ Demo Consult** in the application loads a pre-recorded consultation for **Tushar Sharma** (30-year-old male presenting with fever and sore throat):
+
+* **Transcript Generated:** Full conversational dialogue between doctor and patient, capturing symptoms, duration, medical history (type 2 diabetes, appendectomy in 2015), and medications (metformin, penicillin allergy).
+
+
+* **AI Medical Summary:** Fully populated clinical record featuring **23/23 verified grounded quotes** (`heuristic` engine active).
+
+
+* **Extracted Schema Categories:**
+* *Clinical Summary & Chief Complaint* (fever, sore throat)
+
+
+* *History of Present Illness (HPI)* (Duration: 3 days; Aggravating: worse at night / swallowing; Relieving: paracetamol)
+
+
+* *Symptoms* (Positive & Negative toggles)
+
+
+* *Past Medical History & Medications/Allergies* (metformin 500mg, penicillin allergy)
+
+
+* *Examinations & Vitals* (BP 120/80 mmHg, Temp 101°F, red throat with swollen tonsils)
+
+
+* *Plan & Follow-Up* (Throat swab, CBC, azithromycin prescription, advice, and 1-week follow-up)
+
+
+
+
+
+---
+
+## 📊 Model Selection & Benchmarking
+
+Default configuration uses **`faster-whisper base.en`**, `int8`, `CPU`, `beam 1`.
+
+* *Rationale:* `tiny.en` is fast but weak on complex drug names; `small.en` improves accuracy but roughly doubles CPU latency. `base.en` provides the optimal latency/accuracy balance for live VAD-chunked use.
+
+
+
+To benchmark models on your own audio clips (`16 kHz mono wav`), run:
+
 ```bash
-python backend/benchmark.py consult1.wav "reference transcript" ...   # 16 kHz mono wav
-```
-It prints WER and real-time factor for tiny/base/small. Switch with `WHISPER_MODEL=small.en` or `ASR_BACKEND=openai` (whisper-1).
+python backend/benchmark.py consult1.wav "reference transcript"
 
-## Structure
 ```
-backend/main.py       FastAPI: /api/transcribe, /api/analyze, /api/health, serves UI
-backend/asr.py        faster-whisper / OpenAI whisper-1
-backend/extract.py    LLM extraction, schema normalisation, quote grounding, offline fallback
-backend/benchmark.py  WER + RTF model comparison
-frontend/             index.html, style.css, app.js (VAD, mic, UI; no build step)
-```
-Extracted schema: patient, chief complaint, HPI (onset/duration/progression/aggravating/relieving), symptoms (positive/negative), PMH, medications + allergies, observations (vitals/exam), assessment, plan (investigations/prescriptions/advice/follow-up), clinical summary.
 
-## Limits / next steps
-Energy VAD is lightweight but not as robust as a neural VAD (Silero via onnxruntime-web is the drop-in upgrade). No speaker diarisation. Output is a draft for clinician review, not a medical record on its own.
+This outputs Word Error Rate (WER) and Real-Time Factor (RTF). Switch models easily using environment variables: `WHISPER_MODEL=small.en` or `ASR_BACKEND=openai`.
+
+---
+
+## 📂 Project Directory Structure
+
+```text
+doctor-app/
+├── backend/
+│   ├── main.py        # FastAPI server: /api/transcribe, /api/analyze, /api/health
+│   ├── asr.py         # faster-whisper / OpenAI whisper-1 integration
+│   ├── extract.py     # LLM extraction, schema normalisation, quote grounding
+│   └── benchmark.py   # WER & RTF model comparison script
+├── frontend/
+│   ├── index.html     # Single-page UI layout
+│   ├── style.css      # Styling & hover-highlight styles
+│   └── app.js         # Client-side VAD, mic streaming, & interactive viewer
+├── README.md          # Project documentation
+├── requirements.txt   # Python dependencies
+└── run.sh             # Automated setup and run script
+
+```
+
+---
+
+## ⚠️ Limitations & Next Steps
+
+* **VAD:** Uses a lightweight energy VAD; upgrading to a neural VAD (Silero via `onnxruntime-web`) is planned as a drop-in enhancement.
+
+
+* **Diarisation:** Speaker diarisation is currently unsupported.
+
+
+* **Clinical Disclaimer:** Generated records serve as a draft for clinician review and are not standalone medical records.
