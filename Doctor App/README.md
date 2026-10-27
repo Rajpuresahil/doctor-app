@@ -1,11 +1,10 @@
+Here is the complete, ready-to-copy Markdown code for your GitHub `README.md` file. It incorporates all your professional details, project overview, architectural highlights, demo walk-through, and setup instructions.
+
+```markdown
 # 🩺 Doctor App — Speech-Gated Clinical Scribe
 
-> **Author:** Sahil Rajpure (M.Sc. AI & Data Science)
-> 
-> 
-> **Overview:** A full-stack, speech-gated clinical scribe web application designed to eliminate administrative burden for clinicians while maintaining strict data grounding and safety.
-> 
-> 
+> **Author:** Sahil Rajpure (M.Sc. AI & Data Science)[cite: 3]  
+> **Overview:** A full-stack, speech-gated clinical scribe web application designed to eliminate administrative burden for clinicians while maintaining strict data grounding and safety[cite: 3].
 
 ---
 
@@ -19,6 +18,8 @@
 Open **http://localhost:8000** in your browser (microphone access requires `localhost` or HTTPS).
 
 * **Optional Configuration:** Copy `.env.example` to `.env` and add your `ANTHROPIC_API_KEY` or `OPENAI_API_KEY`.
+
+
 * **No Keys? No Problem:** The app features a graceful offline fallback utilizing local Whisper and offline rule-based extraction. Click **▶ Demo consult** to run the complete UI workflow instantly without a microphone.
 
 
@@ -145,3 +146,9 @@ doctor-app/
 
 
 * **Clinical Disclaimer:** Generated records serve as a draft for clinician review and are not standalone medical records.
+
+
+
+```
+
+```
